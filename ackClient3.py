@@ -1,6 +1,7 @@
 import random
 import socket
 import json
+import time
 
 ## For Python 3
 
@@ -9,9 +10,8 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_address = ('localhost', 10000)
 
 # Define list of messages to send
-start_message = {'seq': 0, 'data': 'Start'}
-
 messages = [
+    {'seq': 0, 'data': 'Start'},
     {'seq': 1, 'data': 'Hello, World!'},
     {'seq': 2, 'data': 'This is the second message'},
     {'seq': 3, 'data': 'This is the third message'},
@@ -25,26 +25,17 @@ messages = [
 ]
 
 # Define window size of sender
-window_size = 10
+window_size = 5
 
-# Define function to send messages with intentional 20%  packet loss
-def send_message(start, end):
-    if end > len(messages):
-        end = len(messages)
+# Define function to send messages
+def send_message(message):
+    message = json.dumps(message)
 
-    omit = packets_to_lose(start, end)   
+    # Send data to server
+    sock.sendto(message.encode(), server_address)
 
-    for message in messages[start:end]:
-        if message['seq'] not in omit:
-            # Get message from dictionary
-            message = json.dumps(message)
-
-            # Send data to server
-            sock.sendto(message.encode(), server_address)
-
-            # Receive response
-            server_ack, server = sock.recvfrom(4096)	
-            #print('Received from server: ' + server_ack.decode())
+    # Receive response
+    server_ack, server = sock.recvfrom(4096)	
 
     return server_ack
 
@@ -52,38 +43,55 @@ def send_message(start, end):
 def packets_to_lose(start, end):
     numbers = range(start, end)
     packets_lost = round((end-start)*0.2)
+
     omit = random.sample(numbers, packets_lost)
     print(f"Packets lost: {omit} ({100*packets_lost/(end-start)}%)")
         
-    return sorted(omit)
+    return omit
 
 # Run the client
 try:
     # Initialize ack and start index
     server_ack = 0
-    start_index = 0
+    start_index = 1
+    stop_index = window_size
 
     # Synchronize sender and receiver
-    sock.sendto(json.dumps(start_message).encode(), server_address)
+    sock.sendto(json.dumps(messages[0]).encode(), server_address)
+    server_ack, server = sock.recvfrom(4096)
 
     # Implement Go-Back-N
     while True:
-        # Send data, intentionally lose 20% of packets
-        server_ack = int(send_message(start_index, window_size))
+        # Find index of lost packets
+        omit = packets_to_lose(start_index, stop_index)
 
-        # Check if all packets were received according to window size
-        if server_ack != (min(start_index + window_size, len(messages))):
-            print('Error: missing packets')
-            print(f"Expected ACK: {min(start_index + window_size, len(messages))}")
-            print(f"Received ACK: {server_ack}")
-            print(f"Going back to last ACKed packet: {server_ack}\n")
+        # Send packets in window that are not lost
+        for i in range(start_index, stop_index+1):
+            if i not in omit:
+                server_ack = int(send_message(messages[i]))
 
-            # Go back to last received packet
-            start_index = server_ack            
-        else:
+                # Check if ACK is correct, increment start index if so
+                if server_ack == i:
+                    start_index += 1
+
+        # Increment stop index if all packets in window were received
+        if start_index >= len(messages) - 1:
+            print(f"Expected ACK: {stop_index}")
             print(f"Received ACK: {server_ack}")
-            print(f"All packets received, moving to next window")
+            print("All packets received!")
             break
+        elif start_index >= stop_index:
+            print(f"Expected ACK: {stop_index}")
+            print(f"Received ACK: {server_ack}")
+            print("Advancing window...\n")
+            stop_index = min(stop_index + window_size, len(messages)-1)
+        else:
+            print(f"Expected ACK: {stop_index}")
+            print(f"Received ACK: {server_ack}")
+            print("Retransmitting from last ACK...\n")
+            start_index = server_ack + 1
+
+        time.sleep(1)
 
 finally:
     # If all packets were received, close the socket
