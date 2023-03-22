@@ -32,10 +32,10 @@ while True:
             ack = data['seq']
             print("Sending ACK: " + str(ack) + "\n")
 
-        # If the sequence number is less than the expected one, reset the ack to the sender
-        elif data['seq'] < ack + 1:
-            ack = data['seq']
-            print("Sending ACK: " + str(ack) + "\n")
+        # If the sequence number is less than the expected one, reset the ack
+        elif data['seq'] == 0:
+            ack = 0
+            print("Initializing ACK...\n")
 
         # If the sequence number is not the expected one, send the last ack
         else:

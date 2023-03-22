@@ -9,6 +9,8 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_address = ('localhost', 10000)
 
 # Define list of messages to send
+start_message = {'seq': 0, 'data': 'Start'}
+
 messages = [
     {'seq': 1, 'data': 'Hello, World!'},
     {'seq': 2, 'data': 'This is the second message'},
@@ -50,8 +52,8 @@ def send_message(start, end):
 def packets_to_lose(start, end):
     numbers = range(start, end)
     packets_lost = round((end-start)*0.2)
-    print(f"Packets lost: {packets_lost} ({100*packets_lost/(end-start)}%)")
     omit = random.sample(numbers, packets_lost)
+    print(f"Packets lost: {omit} ({100*packets_lost/(end-start)}%)")
         
     return sorted(omit)
 
@@ -61,9 +63,12 @@ try:
     server_ack = 0
     start_index = 0
 
+    # Synchronize sender and receiver
+    sock.sendto(json.dumps(start_message).encode(), server_address)
+
     # Implement Go-Back-N
     while True:
-    # Send data, intentionally lose 20% of packets
+        # Send data, intentionally lose 20% of packets
         server_ack = int(send_message(start_index, window_size))
 
         # Check if all packets were received according to window size
@@ -74,7 +79,7 @@ try:
             print(f"Going back to last ACKed packet: {server_ack}\n")
 
             # Go back to last received packet
-            start_index = server_ack
+            start_index = server_ack            
         else:
             print(f"Received ACK: {server_ack}")
             print(f"All packets received, moving to next window")
