@@ -24,5 +24,8 @@ while True:
         data = json.loads(data)
         if data['seq'] == ack + 1:
             ack = data['seq']
+        elif data['seq'] < ack + 1:
+            ack = data['seq']
         
         sock.sendto(str(ack).encode(), address)
+        
