@@ -26,5 +26,4 @@ while True:
     if data:
         sent = sock.sendto(bytes(m), address)
         print("chr(m) = ",chr(m))
-#        sock.sendto(bytes(m), address)
         sys.stderr.write('sent %s bytes back to %s' % (sent, address))
