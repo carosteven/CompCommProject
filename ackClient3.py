@@ -45,7 +45,7 @@ def packets_to_lose(start, end):
     packets_lost = round((end-start)*0.2)
 
     omit = random.sample(numbers, packets_lost)
-    print(f"Packets lost: {omit} ({100*packets_lost/(end-start)}%)")
+    print(f"Packets lost: {omit} ({100*packets_lost/(end-start)}%)\n")
         
     return omit
 
@@ -54,44 +54,45 @@ try:
     # Initialize ack and start index
     server_ack = 0
     start_index = 1
+    current_index = 1
     stop_index = window_size
 
     # Synchronize sender and receiver
     sock.sendto(json.dumps(messages[0]).encode(), server_address)
     server_ack, server = sock.recvfrom(4096)
 
+    # Find index of lost packets
+    omit = packets_to_lose(start_index, stop_index)
+
     # Implement Go-Back-N
-    while True:
-        # Find index of lost packets
-        omit = packets_to_lose(start_index, stop_index)
+    while start_index <= len(messages) - 1:
+        if current_index not in omit:
+            print(f"Sending Data: {messages[current_index]['data']}")
+            print(f"Sending Sequence Number: {messages[current_index]['seq']}")
+            server_ack = int(send_message(messages[current_index]))
+            print(f"Received ACK: {server_ack}\n")
 
-        # Send packets in window that are not lost
-        for i in range(start_index, stop_index+1):
-            if i not in omit:
-                server_ack = int(send_message(messages[i]))
+        # Check if ACK is correct, increment indexes if so
+        if server_ack == start_index:
+            start_index += 1
+            stop_index = min(stop_index + 1, len(messages)-1)
 
-                # Check if ACK is correct, increment start index if so
-                if server_ack == i:
-                    start_index += 1
+        # Increment current index
+        current_index += 1
 
-        # Increment stop index if all packets in window were received
-        if start_index >= len(messages) - 1:
-            print(f"Expected ACK: {stop_index}")
-            print(f"Received ACK: {server_ack}")
-            print("All packets received!")
+        # Check if all packets have been sent before timeout
+        if start_index > stop_index:
             break
-        elif start_index >= stop_index:
-            print(f"Expected ACK: {stop_index}")
-            print(f"Received ACK: {server_ack}")
-            print("Advancing window...\n")
-            stop_index = min(stop_index + window_size, len(messages)-1)
-        else:
+        elif current_index > stop_index:
             print(f"Expected ACK: {stop_index}")
             print(f"Received ACK: {server_ack}")
             print("Retransmitting from last ACK...\n")
-            start_index = server_ack + 1
+            omit = []
+            current_index = start_index
 
-        time.sleep(1)
+        time.sleep(0.5)
+
+    print("All packets received!")
 
 finally:
     # If all packets were received, close the socket
