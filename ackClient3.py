@@ -36,17 +36,17 @@ def send_message(start, end):
 
             # Send data to server
             sock.sendto(message.encode(), server_address)
-            print(message)
 
             # Receive response
             server_ack, server = sock.recvfrom(4096)	
-            print('Received: ' + server_ack.decode())
+            #print('Received from server: ' + server_ack.decode())
 
     return server_ack
 
 def packets_to_lose(start, end):
     numbers = range(start, end)
     packets_lost = round((end-start)*0.2)
+    print(f"Packets lost: {packets_lost} ({100*packets_lost/(end-start)}%)")
     omit = random.sample(numbers, packets_lost)
         
     return sorted(omit)
@@ -63,13 +63,15 @@ try:
 
         if server_ack != (min(start_index + window_size, len(messages))):
             print('Error: missing packets')
-            print(f"Expected: {min(start_index + window_size, len(messages))}")
-            print(f"Received: {server_ack}")
-            print(f"Going back to last received packet: {server_ack}")
+            print(f"Expected ACK: {min(start_index + window_size, len(messages))}")
+            print(f"Received ACK: {server_ack}")
+            print(f"Going back to last ACKed packet: {server_ack}\n")
 
             # Go back to last received packet
             start_index = server_ack
         else:
+            print(f"Received ACK: {server_ack}")
+            print(f"All packets received, moving to next window")
             break
 
 finally:

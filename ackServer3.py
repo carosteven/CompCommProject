@@ -16,16 +16,24 @@ ack = 0
 while True:
     # receive packets from the sender
     data, address = sock.recvfrom(4096)
-
-    print(str(data.decode()))
     
     if data:
         data = data.decode()
         data = json.loads(data)
+
+        print(f"Received Data: {data['data']}")
+        print(f"Received Sequence Number: {data['seq']}")
+
         if data['seq'] == ack + 1:
             ack = data['seq']
+            print("Sending ACK: " + str(ack) + "\n")
+
         elif data['seq'] < ack + 1:
             ack = data['seq']
+            print("Sending ACK: " + str(ack) + "\n")
+
+        else:
+            print("Unexpected Sequence Number")
+            print("Sending ACK: " + str(ack) + "\n")
         
         sock.sendto(str(ack).encode(), address)
-        
