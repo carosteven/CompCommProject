@@ -50,9 +50,8 @@ def packets_to_lose(start, end):
     packets_lost = round((end-start)*0.2)
 
     omit = random.sample(numbers, packets_lost)
-    print(f"Packets lost: {omit} ({100*packets_lost/(end-start)}%)\n")
         
-    return omit
+    return omit, packets_lost
 
 # Run the client
 try:
@@ -63,11 +62,17 @@ try:
     stop_index = window_size
 
     # Synchronize sender and receiver
+    print(f"Sending Data: {messages[0]['data']}")
+    print(f"Sending Sequence Number: {messages[0]['seq']}")
     sock.sendto(json.dumps(messages[0]).encode(), server_address)
     server_ack, server = sock.recvfrom(4096)
+    print(f"Received ACK: {int(server_ack)}\n")
 
     # Find index of lost packets
-    omit = packets_to_lose(start_index, stop_index)
+    omit, packets_lost = packets_to_lose(start_index, len(messages))
+    print(f"Packet(s) {omit} lost. Loss rate: ({100*packets_lost/(len(messages))}%)\n")
+
+    print("Starting transmission:\n")
 
     # Implement Go-Back-N
     while start_index <= len(messages) - 1:
@@ -76,6 +81,8 @@ try:
             print(f"Sending Sequence Number: {messages[current_index]['seq']}")
             server_ack = int(send_message(messages[current_index]))
             print(f"Received ACK: {server_ack}\n")
+        else:
+            omit.remove(current_index)
 
         # Check if ACK is correct, increment indexes if so
         if server_ack == start_index:
@@ -89,10 +96,10 @@ try:
         if start_index > stop_index:
             break
         elif current_index > stop_index:
+            print("Reached end of Window: Timeout")
             print(f"Expected ACK: {stop_index}")
             print(f"Received ACK: {server_ack}")
             print("Retransmitting from last ACK...\n")
-            omit = []
             current_index = start_index
 
         time.sleep(0.5)
