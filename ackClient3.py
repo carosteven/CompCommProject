@@ -35,12 +35,17 @@ windowEnd = windowSize
 messageLen = 10
 
 while True:
-    if lastAck < windowEnd-1:
+    windowStart = lastAck + 1
+    if windowStart + windowSize < 10:
+        windowEnd = windowStart + windowSize
+    else:
+        windowEnd = 10
+    '''if lastAck < windowEnd-1:
         windowStart = lastAck + 1
         if windowStart + windowSize < 10:
             windowEnd = windowStart + windowSize
         else:
-            windowEnd = 10
+            windowEnd = 10'''
 
     for i in range(windowStart, windowEnd):
         message = {"seq": i, "data": f"This is message {i}"}
