@@ -13,6 +13,7 @@ server_address = ('localhost', 10000)
 start_message = {'seq': 0, 'data': 'Start'}
 
 messages = [
+    {'seq': 0, 'data': 'Start'},
     {'seq': 1, 'data': 'Hello, World!'},
     {'seq': 2, 'data': 'This is the second message'},
     {'seq': 3, 'data': 'This is the third message'},
@@ -26,7 +27,7 @@ messages = [
 ]
 
 # Define window size of sender
-window_size = 5
+window_size = 10
 
 # Define function to send messages with intentional 20%  packet loss
 def send_message(message):
@@ -55,42 +56,43 @@ def packets_to_lose(start, end):
 try:
     # Initialize ack and start index
     server_ack = 0
-    start_index = 0
+    start_index = 1
     stop_index = window_size
 
     # Synchronize sender and receiver
-    sock.sendto(json.dumps(start_message).encode(), server_address)
+    sock.sendto(json.dumps(messages[0]).encode(), server_address)
+    server_ack, server = sock.recvfrom(4096)
 
     # Implement Go-Back-N
     while True:
         # Send data, intentionally lose 20% of packets
         omit = packets_to_lose(start_index, stop_index)
 
-        for i in range(start_index, stop_index):
+        for i in range(start_index, stop_index+1):
             if i not in omit:
                 # Send message if not omitted
                 server_ack = int(send_message(messages[i]))
 
                 # Check if ACK is correct, increment start index if so
-                if server_ack == messages[i]['seq']:
+                if server_ack == i:
                     start_index += 1
 
         # Increment stop index if all packets in window were received
-        if start_index == len(messages):
+        if start_index >= len(messages) - 1:
             print(f"Expected ACK: {stop_index}")
             print(f"Received ACK: {server_ack}")
             print("All packets received!")
             break
-        elif start_index == stop_index:
+        elif start_index >= stop_index:
             print(f"Expected ACK: {stop_index}")
             print(f"Received ACK: {server_ack}")
             print("Advancing window...\n")
-            stop_index += window_size
+            stop_index = min(stop_index + window_size, len(messages)-1)
         else:
             print(f"Expected ACK: {stop_index}")
             print(f"Received ACK: {server_ack}")
             print("Retransmitting from last ACK...\n")
-            print("")
+            start_index = server_ack + 1
 
         time.sleep(1)
 
