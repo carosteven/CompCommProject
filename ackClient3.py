@@ -1,15 +1,14 @@
 import random
 import socket
-import sys
 import json
-import time
 
 ## For Python 3
 
 # Create a UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
 server_address = ('localhost', 10000)
+
+# Define list of messages to send
 messages = [
     {'seq': 1, 'data': 'Hello, World!'},
     {'seq': 2, 'data': 'This is the second message'},
@@ -23,6 +22,10 @@ messages = [
     {'seq': 10, 'data': 'This is the tenth message'}    
 ]
 
+# Define window size of sender
+window_size = 10
+
+# Define function to send messages with intentional 20%  packet loss
 def send_message(start, end):
     if end > len(messages):
         end = len(messages)
@@ -43,6 +46,7 @@ def send_message(start, end):
 
     return server_ack
 
+# Define function to randomly lose 20% of packets
 def packets_to_lose(start, end):
     numbers = range(start, end)
     packets_lost = round((end-start)*0.2)
@@ -51,16 +55,18 @@ def packets_to_lose(start, end):
         
     return sorted(omit)
 
+# Run the client
 try:
+    # Initialize ack and start index
     server_ack = 0
     start_index = 0
-    window_size = 10
 
     # Implement Go-Back-N
     while True:
-    # Send data, intentionally lose packets
+    # Send data, intentionally lose 20% of packets
         server_ack = int(send_message(start_index, window_size))
 
+        # Check if all packets were received according to window size
         if server_ack != (min(start_index + window_size, len(messages))):
             print('Error: missing packets')
             print(f"Expected ACK: {min(start_index + window_size, len(messages))}")
@@ -75,6 +81,7 @@ try:
             break
 
 finally:
-    sys.stderr.write('\nclosing socket')
+    # If all packets were received, close the socket
+    print('\nClosing socket')
     
 sock.close()
