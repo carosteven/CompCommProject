@@ -21,7 +21,12 @@ messages = [
     {'seq': 7, 'data': 'This is the seventh message'},
     {'seq': 8, 'data': 'This is the eighth message'},
     {'seq': 9, 'data': 'This is the ninth message'},
-    {'seq': 10, 'data': 'This is the tenth message'}    
+    {'seq': 10, 'data': 'This is the tenth message'},
+    {'seq': 11, 'data': 'This is the eleventh message'},
+    {'seq': 12, 'data': 'This is the twelfth message'},
+    {'seq': 13, 'data': 'This is the thirteenth message'},
+    {'seq': 14, 'data': 'This is the fourteenth message'},
+    {'seq': 15, 'data': 'This is the fifteenth message'}    
 ]
 
 # Define window size of sender
