@@ -1,0 +1,35 @@
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server_address = ('localhost', 10000);
+
+window_size = N
+server_ack = 0
+start_index = 1
+current_index = 1
+stop_index = window_size
+timers = ()
+timeout = 0.5;
+
+sock.sendto(init.encode(), server_address)
+server_ack, server = sock.recvfrom(4096);
+ 
+while (start_index < len(message) {
+  send_message(current_index)
+  server_ack, server = sock.recvfrom(4096)
+  timers.append(time.time());
+  if(server_ack == start_index) {
+    start_index += 1
+    stop_index = min(stop_index + 1, len(messages))
+    timers.pop(0);
+  }
+
+    
+  current_index += 1;
+  
+  if(current_index > stop_index)
+    if (time.time() - timers(0) < timeout) {
+        current_index = start_index
+        timers = ();
+      }
+}
+        
+  

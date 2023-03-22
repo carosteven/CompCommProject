@@ -1,0 +1,18 @@
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server_address = ('localhost', 10000)
+sock.bind(server_address);
+
+ack = 0;
+
+do {
+  data, address = sock.recvfrom(4096);
+  data.decode();
+
+  if (data('seq') == ack + 1)
+    ack = data('seq')';
+  else
+    print('Unexpected sequence number')
+    print('Sending previous ACK');
+    
+  sock.sendto(ack.encode(), address;
+} while (True)
