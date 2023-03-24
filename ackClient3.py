@@ -30,7 +30,7 @@ messages = [
 ]
 
 # Define window size of sender
-window_size = 8
+window_size = 5
 
 # Define function to send messages
 def send_message(message):
@@ -86,11 +86,12 @@ try:
         if current_index not in omit:
             print(f"Sending Data: {messages[current_index]['data']}")
             print(f"Sending Sequence Number: {messages[current_index]['seq']}")
-            timers.append(time.time())
             server_ack = int(send_message(messages[current_index]))
             print(f"Received ACK: {server_ack}\n")
         else:
             omit.remove(current_index)
+        
+        timers.append(time.time())
 
         # Check if ACK is correct, increment indexes if so
         if server_ack == start_index:
@@ -100,7 +101,7 @@ try:
 
         # Increment current index
         current_index += 1
-
+        
         # Check if all packets have been sent before timeout
         if start_index > stop_index:
             break
