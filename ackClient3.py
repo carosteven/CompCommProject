@@ -30,7 +30,7 @@ messages = [
 ]
 
 # Define window size of sender
-window_size = 5
+window_size = 8
 
 # Define function to send messages
 def send_message(message):
@@ -48,6 +48,9 @@ def send_message(message):
 def packets_to_lose(start, end):
     numbers = range(start, end)
     packets_lost = round((end-start)*0.2)
+    
+    if packets_lost/(len(messages)) < 0.2:
+        packets_lost += 1
 
     omit = random.sample(numbers, packets_lost)
         
@@ -60,6 +63,10 @@ try:
     start_index = 1
     current_index = 1
     stop_index = window_size
+
+    # Create timeout buffer and threshold
+    timers = []
+    timeout = 0.5
 
     # Synchronize sender and receiver
     print(f"Sending Data: {messages[0]['data']}")
@@ -79,6 +86,7 @@ try:
         if current_index not in omit:
             print(f"Sending Data: {messages[current_index]['data']}")
             print(f"Sending Sequence Number: {messages[current_index]['seq']}")
+            timers.append(time.time())
             server_ack = int(send_message(messages[current_index]))
             print(f"Received ACK: {server_ack}\n")
         else:
@@ -88,6 +96,7 @@ try:
         if server_ack == start_index:
             start_index += 1
             stop_index = min(stop_index + 1, len(messages)-1)
+            timers.pop(0)
 
         # Increment current index
         current_index += 1
@@ -96,11 +105,15 @@ try:
         if start_index > stop_index:
             break
         elif current_index > stop_index:
-            print("Reached end of Window: Timeout")
-            print(f"Expected ACK: {stop_index}")
-            print(f"Received ACK: {server_ack}")
-            print("Retransmitting from last ACK...\n")
-            current_index = start_index
+            while True:
+                if time.time() - timers[0] > timeout:
+                    print("Reached end of Window: Timeout")
+                    print(f"Expected ACK: {stop_index}")
+                    print(f"Received ACK: {server_ack}")
+                    print("Retransmitting from last ACK...\n")
+                    current_index = start_index
+                    timers = []
+                    break
 
         time.sleep(0.5)
 
