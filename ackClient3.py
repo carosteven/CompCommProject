@@ -57,7 +57,7 @@ def packets_to_lose(start, end):
 try:
     # Define window size of sender
     window_size = 5
-    
+
     # Initialize ack and start index
     server_ack = 0
     start_index = 1
@@ -68,12 +68,15 @@ try:
     timers = []
     timeout = 0.5
 
+    # Comment style 
+    verbose = True
+
     # Synchronize sender and receiver
-    print(f"Sending Data: {messages[0]['data']}")
-    print(f"Sending Sequence Number: {messages[0]['seq']}")
+    if verbose: print(f"Sending Data: {messages[0]['data']}")
+    if verbose: print(f"Sending Sequence Number: {messages[0]['seq']}")
     sock.sendto(json.dumps(messages[0]).encode(), server_address)
     server_ack, server = sock.recvfrom(4096)
-    print(f"Received ACK: {int(server_ack)}\n")
+    if verbose: print(f"Received ACK: {int(server_ack)}\n")
 
     # Find index of lost packets
     omit, packets_lost = packets_to_lose(start_index, len(messages))
@@ -84,10 +87,12 @@ try:
     # Implement Go-Back-N
     while start_index <= len(messages) - 1:
         if current_index not in omit:
-            print(f"Sending Data: {messages[current_index]['data']}")
-            print(f"Sending Sequence Number: {messages[current_index]['seq']}")
+            if verbose: print(f"Sending Data: {messages[current_index]['data']}")
+            if verbose: print(f"Sending Sequence Number: {messages[current_index]['seq']}")
             server_ack = int(send_message(messages[current_index]))
-            print(f"Received ACK: {server_ack}\n")
+            if verbose: print(f"Received ACK: {server_ack}\n") 
+            else:
+                print(current_index, end=' ')
         else:
             omit.remove(current_index)
         
@@ -108,20 +113,21 @@ try:
         elif current_index > stop_index:
             while True:
                 if time.time() - timers[0] > timeout:
-                    print("Reached end of Window: Timeout")
-                    print(f"Expected ACK: {stop_index}")
-                    print(f"Received ACK: {server_ack}")
-                    print("Retransmitting from last ACK...\n")
+                    if verbose: 
+                        print("Reached end of Window: Timeout")
+                        print(f"Expected ACK: {stop_index}")
+                        print(f"Received ACK: {server_ack}")
+                        print("Retransmitting from last ACK...\n")
                     current_index = start_index
                     timers = []
                     break
 
         time.sleep(0.5)
 
-    print("All packets received!")
+    if verbose: print("All packets received!")
 
 finally:
     # If all packets were received, close the socket
-    print('\nClosing socket')
+    if verbose: print('\nClosing socket')
     
 sock.close()

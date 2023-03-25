@@ -13,6 +13,11 @@ sock.bind(server_address)
 # Create the ack counter
 ack = 0
 
+verbose = True
+
+if not verbose:
+    print("ACKs received: \n")
+
 while True:
     # receive packets from the sender
     data, address = sock.recvfrom(4096)
@@ -24,23 +29,32 @@ while True:
         data = json.loads(data)
 
         # Print the received data and sequence number
-        print(f"Received Data: {data['data']}")
-        print(f"Received Sequence Number: {data['seq']}")
+        if verbose:
+            print(f"Received Data: {data['data']}")
+            print(f"Received Sequence Number: {data['seq']}")
 
         # Check if the sequence number is the expected one
         if data['seq'] == ack + 1:
             ack = data['seq']
-            print("Sending ACK: " + str(ack) + "\n")
+            if verbose: print("Sending ACK: " + str(ack) + "\n")
+            else:
+                print(ack, end=' ')
 
         # If the sequence number is less than the expected one, reset the ack
         elif data['seq'] == 0:
             ack = 0
-            print("Initializing ACK...\n")
+            if verbose: print("Initializing ACK...\n")
 
         # If the sequence number is not the expected one, send the last ack
         else:
-            print("Unexpected Sequence Number")
-            print("Sending ACK: " + str(ack) + "\n")
+            if verbose: 
+                print("Unexpected Sequence Number")
+                print("Sending ACK: " + str(ack) + "\n")
+            else:
+                print(ack, end=' ')
         
         # Send the ack to the client
         sock.sendto(str(ack).encode(), address)
+
+        if ack == 15:
+            break
