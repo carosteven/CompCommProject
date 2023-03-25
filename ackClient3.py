@@ -1,3 +1,12 @@
+'''
+Computer Communications Project 
+Client Code
+
+Steven Caro 105205197
+Mathew Dunne 105213664
+Gian Favero 105215891
+'''
+
 import random
 import socket
 import json

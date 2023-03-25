@@ -1,7 +1,14 @@
+'''
+Computer Communications Project 
+Server Code
+
+Steven Caro 105205197
+Mathew Dunne 105213664
+Gian Favero 105215891
+'''
+
 import socket
 import json
-
-## For Python 3
 
 # Create a server socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
