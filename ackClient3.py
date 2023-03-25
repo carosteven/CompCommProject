@@ -29,9 +29,6 @@ messages = [
     {'seq': 15, 'data': 'This is the fifteenth message'}    
 ]
 
-# Define window size of sender
-window_size = 5
-
 # Define function to send messages
 def send_message(message):
     message = json.dumps(message)
@@ -58,6 +55,9 @@ def packets_to_lose(start, end):
 
 # Run the client
 try:
+    # Define window size of sender
+    window_size = 5
+    
     # Initialize ack and start index
     server_ack = 0
     start_index = 1
