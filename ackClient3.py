@@ -65,7 +65,7 @@ def packets_to_lose(start, end):
 # Run the client
 try:
     # Define window size of sender
-    window_size = 5
+    window_size = 15
 
     # Initialize ack and start index
     server_ack = 0
@@ -107,6 +107,7 @@ try:
             server_ack = int(send_message(messages[current_index]))
             if verbose: print(f"Received ACK: {server_ack}\n") 
         else:
+            print("")
             omit.remove(current_index)
         
         timers.append(time.time())
