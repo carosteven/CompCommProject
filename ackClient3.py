@@ -65,7 +65,7 @@ def packets_to_lose(start, end):
 # Run the client
 try:
     # Define window size of sender
-    window_size = 15
+    window_size = 5
 
     # Initialize ack and start index
     server_ack = 0
@@ -78,7 +78,7 @@ try:
     timeout = 0.5
 
     # Comment style 
-    verbose = False
+    verbose = True
 
     # Synchronize sender and receiver
     if verbose: print(f"Sending Data: {messages[0]['data']}")
@@ -94,17 +94,18 @@ try:
     print("Starting transmission:\n")
 
     if not verbose:
-        print("ACKs received: \n")
+        print("Packets Sent: \n")
 
     # Implement Go-Back-N
     while start_index <= len(messages) - 1:
+        if verbose: print(f"Sending Data: {messages[current_index]['data']}")
+        if verbose: print(f"Sending Sequence Number: {messages[current_index]['seq']}")
+        else:
+            print(f"{messages[current_index]['seq']}", end=' ')
+
         if current_index not in omit:
-            if verbose: print(f"Sending Data: {messages[current_index]['data']}")
-            if verbose: print(f"Sending Sequence Number: {messages[current_index]['seq']}")
             server_ack = int(send_message(messages[current_index]))
             if verbose: print(f"Received ACK: {server_ack}\n") 
-            else:
-                print(current_index, end=' ')
         else:
             omit.remove(current_index)
         
