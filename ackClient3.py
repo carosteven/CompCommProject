@@ -78,7 +78,7 @@ try:
     timeout = 0.5
 
     # Comment style 
-    verbose = True
+    verbose = False
 
     # Synchronize sender and receiver
     if verbose: print(f"Sending Data: {messages[0]['data']}")
@@ -92,6 +92,9 @@ try:
     print(f"Packet(s) {omit} lost. Loss rate: ({100*packets_lost/(len(messages))}%)\n")
 
     print("Starting transmission:\n")
+
+    if not verbose:
+        print("ACKs received: \n")
 
     # Implement Go-Back-N
     while start_index <= len(messages) - 1:

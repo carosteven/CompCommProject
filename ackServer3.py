@@ -20,10 +20,10 @@ sock.bind(server_address)
 # Create the ack counter
 ack = 0
 
-verbose = True
+verbose = False
 
 if not verbose:
-    print("ACKs received: \n")
+    print("ACKs sent: \n")
 
 while True:
     # receive packets from the sender
